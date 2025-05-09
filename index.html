@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Vòng Quay May Mắn</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+
+    .wheel-container {
+      margin-top: 40px;
+    }
+
+    .wheel-container h2 {
+      font-size: 32px;
+      color: #e74c3c;
+      margin-bottom: 5px;
+    }
+
+    .wheel-container p {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    canvas {
+      border-radius: 50%;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    }
+
+    #spin {
+      margin-top: 20px;
+      padding: 12px 24px;
+      font-size: 18px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    #spin:hover:enabled {
+      background-color: #2980b9;
+    }
+
+    #spin:disabled {
+      background-color: #bdc3c7;
+      cursor: not-allowed;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 20px;
+      color: #27ae60;
+      font-weight: bold;
+    }
+
+    .pointer {
+      width: 0;
+      height: 0;
+      border-left: 20px solid transparent;
+      border-right: 20px solid transparent;
+      border-bottom: 30px solid #e74c3c;
+      margin: 0 auto -20px;
+      position: relative;
+      z-index: 1;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wheel-container">
+    <h2>🎉 Vòng Quay Giảm Giá Lần Sau 🎉</h2>
+    <p>Hãy thử vận may của bạn để nhận mã giảm giá hấp dẫn!</p>
+    <div class="pointer"></div>
+    <canvas id="wheel" width="500" height="500"></canvas>
+    <br>
+    <button id="spin">Quay</button>
+    <p id="result"></p>
+  </div>
+
+  <!-- Âm thanh phát khi quay -->
+  <audio id="spinSound" src="nhac-xo-so.mp3"></audio>
+
+  <script>
+    const canvas = document.getElementById("wheel");
+    const ctx = canvas.getContext("2d");
+    const segments = ["Giảm giá 5k vé phim", "Giảm giá 10k vé phim", "Chúc may mắn lần sau", "Giảm giá 5k bắp nước", "Giảm giá 50k vé phim", "+1 lượt quay"];
+    const colors = ["#A3E4D7", "#F9E79F", "#FADBD8", "#D5A6BD", "#E74C3C", "#85C1AE"];
+    const spinBtn = document.getElementById("spin");
+    const result = document.getElementById("result");
+    const spinSound = document.getElementById("spinSound");
+
+    let startAngle = 0;
+    const arc = Math.PI * 2 / segments.length;
+    let spinAngle = 0;
+
+    function drawWheel() {
+      for (let i = 0; i < segments.length; i++) {
+        const angle = startAngle + i * arc;
+        ctx.fillStyle = colors[i];
+        ctx.beginPath();
+        ctx.moveTo(250, 250);
+        ctx.arc(250, 250, 250, angle, angle + arc);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.save();
+        ctx.translate(250, 250);
+        ctx.rotate(angle + arc / 2);
+        ctx.fillStyle = "#333";
+        ctx.font = "bold 16px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(segments[i], 130, 10);
+        ctx.restore();
+      }
+    }
+    drawWheel();
+
+    function spinWheel() {
+      // Vô hiệu hóa nút để không bấm nhiều lần
+      spinBtn.disabled = true;
+
+      // Phát nhạc trước
+      spinSound.currentTime = 0;
+      spinSound.play();
+
+      // Chờ 2 giây trước khi quay vòng quay
+      setTimeout(() => {
+        const spins = Math.floor(Math.random() * 10 + 5);
+        const totalAngle = spins * 2 * Math.PI + Math.random() * 2 * Math.PI;
+        const duration = 6000;
+        const start = performance.now();
+
+        function animate(now) {
+          const elapsed = now - start;
+          const progress = Math.min(elapsed / duration, 1);
+          spinAngle = totalAngle * easeOutCubic(progress);
+          startAngle = spinAngle % (Math.PI * 2);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          drawWheel();
+
+          if (progress < 1) {
+            requestAnimationFrame(animate);
+          } else {
+            // Tính toán kết quả sao cho không thể trúng vào "Giảm giá 50k"
+            // const degrees = spinAngle * 180 / Math.PI;
+            // let index = Math.floor((degrees % 360) / (360 / segments.length));
+// Tính toán kết quả chính xác dựa trên góc hiện tại
+const degrees = startAngle * 180 / Math.PI;
+const adjustedDegrees = (360 - (degrees % 360)) % 360; // Điều chỉnh góc về vị trí con trỏ
+let index = Math.floor(adjustedDegrees / (360 / segments.length));
+
+            // Loại bỏ phần "Giảm giá 50k" trong kết quả
+            if (segments[index] === "Giảm giá 50k vé phim") {
+              index = (index + 1) % segments.length; // Chuyển sang phần tiếp theo
+            }
+
+            const spinResult = segments[index];
+            result.innerText = "🎁 Bạn trúng: " + spinResult + " 🎁";
+            localStorage.setItem("hasSpun", "true");
+            localStorage.setItem("result", "🎁 Bạn trúng: " + spinResult + " 🎁");
+            if (spinResult === "+1 lượt quay") {
+              spinBtn.disabled = false; // Hiển thị lại nút quay
+            }
+
+          }
+        }
+
+        requestAnimationFrame(animate);
+      }, 500); // Delay 2 giây
+    }
+
+    function easeOutCubic(t) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    spinBtn.addEventListener("click", spinWheel);
+  </script>
+</body>
+
+</html>

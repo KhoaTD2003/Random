@@ -191,14 +191,14 @@
             const spinResult = segments[index];
             result.innerText = "🎁 Bạn trúng: " + spinResult + " 🎁";
             // localStorage.setItem("hasSpun", "true");
-            // Lưu lại ngày quay
-            const today = new Date().toISOString().split('T')[0]; // Lưu ngày quay
-            localStorage.setItem("lastSpinDate", today);
 
             localStorage.setItem("result", "🎁 Bạn trúng: " + spinResult + " 🎁");
             if (spinResult === "+1 lượt quay") {
               spinBtn.disabled = false; // Hiển thị lại nút quay
             }
+            // Lưu lại ngày quay
+            const today = new Date().toISOString().split('T')[0]; // Lưu ngày quay
+            localStorage.setItem("lastSpinDate", today);
 
           }
         }

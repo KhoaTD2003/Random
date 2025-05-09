@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Vòng Quay May Mắn</title>
+  <title>Vòng Quay Ưu Đãi</title>
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -82,7 +82,7 @@
     <div class="pointer"></div>
     <canvas id="wheel" width="500" height="500"></canvas>
     <br>
-    <button id="spin">Quay</button>
+    <button id="spin">Quay Ngay</button>
     <p id="result"></p>
   </div>
 
@@ -123,6 +123,10 @@
       }
     }
     drawWheel();
+    if (localStorage.getItem("hasSpun")) {
+      spinBtn.disabled = true;
+      result.innerText = localStorage.getItem("result");
+    }
 
     function spinWheel() {
       // Vô hiệu hóa nút để không bấm nhiều lần

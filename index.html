@@ -144,12 +144,12 @@
       return lastSpinDate === today;
     }
 
-    if (hasUserSpunToday()) {
-      spinBtn.disabled = true;
-      result.innerText = localStorage.getItem("result");
-    } else {
-      spinBtn.disabled = false;
-    }
+    // if (hasUserSpunToday()) {
+    //   spinBtn.disabled = true;
+    //   result.innerText = localStorage.getItem("result");
+    // } else {
+    //   spinBtn.disabled = false;
+    // }
 
     function spinWheel() {
       // Vô hiệu hóa nút để không bấm nhiều lần
@@ -184,9 +184,9 @@
             let index = Math.floor(normalizedAngle / arc);
 
             // Loại bỏ phần "Giảm giá 50k" trong kết quả
-            if (segments[index] === "Giảm giá 50k vé phim") {
-              index = (index + 1) % segments.length; // Chuyển sang phần tiếp theo
-            }
+            // if (segments[index] === "Giảm giá 50k vé phim") {
+            //   index = (index + 1) % segments.length; // Chuyển sang phần tiếp theo
+            // }
 
             const spinResult = segments[index];
             result.innerText = "🎁 Bạn trúng: " + spinResult + " 🎁";

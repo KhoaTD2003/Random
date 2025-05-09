@@ -72,6 +72,12 @@
       position: relative;
       z-index: 1;
     }
+
+    .bottom-image {
+      width: 500px;
+      margin-top: 20px;
+      border-radius: 10px;
+    }
   </style>
 </head>
 
@@ -84,6 +90,10 @@
     <br>
     <button id="spin">Quay Ngay</button>
     <p id="result"></p>
+    <p class="screenshot-note">📸 Vui lòng chụp lại màn hình kết quả sau khi quay để nhận thưởng!</p>
+
+    <img src="fb.png" alt="Ảnh minh họa" class="bottom-image">
+
   </div>
 
   <!-- Âm thanh phát khi quay -->
@@ -123,9 +133,22 @@
       }
     }
     drawWheel();
-    if (localStorage.getItem("hasSpun")) {
+    // if (localStorage.getItem("hasSpun")) {
+    //   spinBtn.disabled = true;
+    //   result.innerText = localStorage.getItem("result");
+    // }
+
+    function hasUserSpunToday() {
+      const today = new Date().toISOString().split('T')[0]; // Lấy ngày hiện tại theo định dạng YYYY-MM-DD
+      const lastSpinDate = localStorage.getItem("lastSpinDate");
+      return lastSpinDate === today;
+    }
+
+    if (hasUserSpunToday()) {
       spinBtn.disabled = true;
       result.innerText = localStorage.getItem("result");
+    } else {
+      spinBtn.disabled = false;
     }
 
     function spinWheel() {
@@ -154,13 +177,11 @@
           if (progress < 1) {
             requestAnimationFrame(animate);
           } else {
-            // Tính toán kết quả sao cho không thể trúng vào "Giảm giá 50k"
-            // const degrees = spinAngle * 180 / Math.PI;
-            // let index = Math.floor((degrees % 360) / (360 / segments.length));
-// Tính toán kết quả chính xác dựa trên góc hiện tại
-const degrees = startAngle * 180 / Math.PI;
-const adjustedDegrees = (360 - (degrees % 360)) % 360; // Điều chỉnh góc về vị trí con trỏ
-let index = Math.floor(adjustedDegrees / (360 / segments.length));
+
+
+            // Góc hiện tại đã quay
+            let normalizedAngle = (2 * Math.PI - (spinAngle % (2 * Math.PI)) + Math.PI * 3 / 2) % (2 * Math.PI);
+            let index = Math.floor(normalizedAngle / arc);
 
             // Loại bỏ phần "Giảm giá 50k" trong kết quả
             if (segments[index] === "Giảm giá 50k vé phim") {
@@ -169,7 +190,11 @@ let index = Math.floor(adjustedDegrees / (360 / segments.length));
 
             const spinResult = segments[index];
             result.innerText = "🎁 Bạn trúng: " + spinResult + " 🎁";
-            localStorage.setItem("hasSpun", "true");
+            // localStorage.setItem("hasSpun", "true");
+            // Lưu lại ngày quay
+            const today = new Date().toISOString().split('T')[0]; // Lưu ngày quay
+            localStorage.setItem("lastSpinDate", today);
+
             localStorage.setItem("result", "🎁 Bạn trúng: " + spinResult + " 🎁");
             if (spinResult === "+1 lượt quay") {
               spinBtn.disabled = false; // Hiển thị lại nút quay

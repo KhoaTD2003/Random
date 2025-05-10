@@ -67,11 +67,16 @@
       height: 0;
       border-left: 20px solid transparent;
       border-right: 20px solid transparent;
-      border-bottom: 30px solid #e74c3c;
-      margin: 0 auto -20px;
+      border-top: 30px solid #e74c3c;
+      /* Đổi từ border-bottom sang border-top */
+      margin: -20px auto 10px;
+      /* Điều chỉnh vị trí lên trên canvas */
       position: relative;
       z-index: 1;
+      margin: 10px auto -20px;
+
     }
+
 
     .bottom-image {
       width: 500px;
@@ -83,7 +88,7 @@
 
 <body>
   <div class="wheel-container">
-    <h2>🎉 Vòng Quay Giảm Giá Lần Sau 🎉</h2>
+    <h2>🎉 Vòng Quay Giảm Giá Lần Đặt Sau 🎉</h2>
     <p>Hãy thử vận may của bạn để nhận mã giảm giá hấp dẫn!</p>
     <div class="pointer"></div>
     <canvas id="wheel" width="500" height="500"></canvas>
@@ -133,14 +138,19 @@
       }
     }
     drawWheel();
-    // if (localStorage.getItem("hasSpun")) {
-    //   spinBtn.disabled = true;
-    //   result.innerText = localStorage.getItem("result");
-    // }
 
     function hasUserSpunToday() {
       const today = new Date().toISOString().split('T')[0]; // Lấy ngày hiện tại theo định dạng YYYY-MM-DD
       const lastSpinDate = localStorage.getItem("lastSpinDate");
+
+      const bonusSpin = localStorage.getItem("bonusSpin");
+      if (bonusSpin === "true") {
+        result.innerText = localStorage.getItem("result") || "🎁 Bạn có 1 lượt quay thưởng 🎁";
+
+        return false; // Vẫn được quay nếu đang có lượt quay thưởng
+      }
+
+
       return lastSpinDate === today;
     }
 
@@ -161,8 +171,16 @@
 
       // Chờ 2 giây trước khi quay vòng quay
       setTimeout(() => {
+        // Danh sách hợp lệ (loại bỏ phần 50k)
+        const validIndexes = segments
+          .map((value, idx) => value !== "Giảm giá 50k vé phim" ? idx : -1)
+          .filter(idx => idx !== -1);
+
+        const selectedIndex = validIndexes[Math.floor(Math.random() * validIndexes.length)];
+        const stopAngle = (Math.PI * 3 / 2) - (selectedIndex * arc) - (arc / 2);
         const spins = Math.floor(Math.random() * 10 + 5);
-        const totalAngle = spins * 2 * Math.PI + Math.random() * 2 * Math.PI;
+        const totalAngle = spins * 2 * Math.PI + stopAngle;
+
         const duration = 6000;
         const start = performance.now();
 
@@ -195,6 +213,10 @@
             localStorage.setItem("result", "🎁 Bạn trúng: " + spinResult + " 🎁");
             if (spinResult === "+1 lượt quay") {
               spinBtn.disabled = false; // Hiển thị lại nút quay
+              localStorage.setItem("bonusSpin", "true");
+            } else {
+              localStorage.removeItem("bonusSpin");
+
             }
             // Lưu lại ngày quay
             const today = new Date().toISOString().split('T')[0]; // Lưu ngày quay

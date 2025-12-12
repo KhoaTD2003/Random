@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Vòng Quay Ưu Đãi</title>
+  <title>Săn Tuần Lộc</title>
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -105,6 +105,177 @@
   <audio id="spinSound" src="nhac-xo-so.mp3"></audio>
 
   <script>
+    if (!("ontouchstart" in window)) {
+      document.body.innerHTML = "<h2>Vui lòng dùng điện thoại để quay!</h2>";
+    }
+
+    const canvas = document.getElementById("wheel");
+    const ctx = canvas.getContext("2d");
+
+    // Sửa tên segment
+    const segments = [
+      "Giảm giá 5k vé phim",
+      "Giảm giá 10k vé phim",
+      "Tuần lộc Jollibee",
+      "Giảm giá 5k bắp nước",
+      "Giảm giá 50k vé phim",
+      "+1 lượt quay"
+    ];
+
+    const colors = ["#A3E4D7", "#F9E79F", "#FADBD8", "#D5A6BD", "#00FF00", "#85C1AE"];
+    const spinBtn = document.getElementById("spin");
+    const result = document.getElementById("result");
+    const spinSound = document.getElementById("spinSound");
+
+    let startAngle = 0;
+    const arc = Math.PI * 2 / segments.length;
+    let spinAngle = 0;
+
+    // ⭐ ẢNH JOLLIBEE Ở GIỮA VÒNG QUAY ⭐
+    const centerImage = new Image();
+    centerImage.src = "jollibee.png"; // đổi ảnh nếu cần
+
+    centerImage.onload = () => {
+      drawWheel(); // Vẽ lại khi ảnh load xong
+    };
+
+    function drawWheel() {
+      for (let i = 0; i < segments.length; i++) {
+        const angle = startAngle + i * arc;
+        ctx.fillStyle = colors[i];
+        ctx.beginPath();
+        ctx.moveTo(250, 250);
+        ctx.arc(250, 250, 250, angle, angle + arc);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.save();
+        ctx.translate(250, 250);
+        ctx.rotate(angle + arc / 2);
+        ctx.fillStyle = "#333";
+        ctx.font = "bold 16px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(segments[i], 150, 10);
+        ctx.restore();
+
+      }
+      ctx.save();
+      const size = 110;
+      const radius = size / 2;
+
+      // Đổ bóng nhẹ
+      ctx.shadowColor = "rgba(0,0,0,0.3)";
+      ctx.shadowBlur = 15;
+
+      // Border trắng
+      ctx.beginPath();
+      ctx.arc(250, 250, radius + 6, 0, Math.PI * 2);
+      ctx.fillStyle = "white";
+      ctx.fill();
+
+      // Clip ảnh tròn
+      ctx.beginPath();
+      ctx.arc(250, 250, radius, 0, Math.PI * 2);
+      ctx.clip();
+
+      // Vẽ ảnh
+      ctx.drawImage(centerImage, 250 - radius, 250 - radius, size, size);
+
+      ctx.restore();
+
+    }
+    drawWheel();
+
+    function hasUserSpunToday() {
+      const today = new Date().toISOString().split('T')[0];
+      const lastSpinDate = localStorage.getItem("lastSpinDate");
+
+      const bonusSpin = localStorage.getItem("bonusSpin");
+      if (bonusSpin === "true") {
+        result.innerText = localStorage.getItem("result") || "🎁 Bạn có 1 lượt quay thưởng 🎁";
+        return false;
+      }
+
+      return lastSpinDate === today;
+    }
+
+    if (hasUserSpunToday()) {
+      spinBtn.disabled = true;
+      result.innerText = localStorage.getItem("result");
+    }
+
+    function spinWheel() {
+      spinBtn.disabled = true;
+
+      spinSound.currentTime = 0;
+      spinSound.play();
+
+      setTimeout(() => {
+
+        // ❌ Loại "Tuần lộc" và "Giảm giá 50k vé phim"
+        const invalid = ["Tuần lộc Jollibee", "Giảm giá 50k vé phim"];
+        const validIndexes = segments
+          .map((value, idx) => !invalid.includes(value) ? idx : -1)
+          .filter(idx => idx !== -1);
+
+        const selectedIndex = validIndexes[Math.floor(Math.random() * validIndexes.length)];
+        const stopAngle = (Math.PI * 3 / 2) - (selectedIndex * arc) - (arc / 2);
+        const spins = Math.floor(Math.random() * 10 + 5);
+        const totalAngle = spins * 2 * Math.PI + stopAngle;
+
+        const duration = 6000;
+        const start = performance.now();
+
+        function animate(now) {
+          const elapsed = now - start;
+          const progress = Math.min(elapsed / duration, 1);
+          spinAngle = totalAngle * easeOutCubic(progress);
+          startAngle = spinAngle % (Math.PI * 2);
+
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          drawWheel();
+
+          if (progress < 1) {
+            requestAnimationFrame(animate);
+          } else {
+
+            let normalizedAngle = (2 * Math.PI - (spinAngle % (2 * Math.PI)) + Math.PI * 3 / 2) % (2 * Math.PI);
+            let index = Math.floor(normalizedAngle / arc);
+
+            // Nếu rơi vào 2 ô bị cấm, tự chuyển sang ô kế bên an toàn
+            if (invalid.includes(segments[index])) {
+              index = validIndexes[0];
+            }
+
+            const spinResult = segments[index];
+            result.innerText = "🎁 Bạn trúng: " + spinResult + " 🎁";
+
+            localStorage.setItem("result", result.innerText);
+
+            if (spinResult === "+1 lượt quay") {
+              spinBtn.disabled = false;
+              localStorage.setItem("bonusSpin", "true");
+            } else {
+              localStorage.removeItem("bonusSpin");
+            }
+
+            const today = new Date().toISOString().split('T')[0];
+            localStorage.setItem("lastSpinDate", today);
+          }
+        }
+
+        requestAnimationFrame(animate);
+      }, 500);
+    }
+
+    function easeOutCubic(t) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    spinBtn.addEventListener("click", spinWheel);
+  </script>
+
+  <!-- <script>
     const canvas = document.getElementById("wheel");
     const ctx = canvas.getContext("2d");
     const segments = ["Giảm giá 5k vé phim", "Giảm giá 10k vé phim", "Chúc may mắn lần sau", "Giảm giá 5k bắp nước", "Giảm giá 50k vé phim", "+1 lượt quay"];
@@ -234,7 +405,7 @@
     }
 
     spinBtn.addEventListener("click", spinWheel);
-  </script>
+  </script> -->
 </body>
 
 </html>

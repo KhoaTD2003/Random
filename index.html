@@ -114,10 +114,10 @@
 
     // Sửa tên segment
     const segments = [
-      "Giảm giá 5k vé phim",
       "Giảm giá 10k vé phim",
-      "Tuần lộc Jollibee",
+      "Gấu bông CGV",
       "Giảm giá 5k bắp nước",
+      "Giảm giá 5k vé phim",
       "Giảm giá 50k vé phim",
       "+1 lượt quay"
     ];
@@ -133,7 +133,7 @@
 
     // ⭐ ẢNH JOLLIBEE Ở GIỮA VÒNG QUAY ⭐
     const centerImage = new Image();
-    centerImage.src = "jollibee.png"; // đổi ảnh nếu cần
+    centerImage.src = "gaucgv.jpg"; // đổi ảnh nếu cần
 
     centerImage.onload = () => {
       drawWheel(); // Vẽ lại khi ảnh load xong
@@ -213,7 +213,7 @@
       setTimeout(() => {
 
         // ❌ Loại "Tuần lộc" và "Giảm giá 50k vé phim"
-        const invalid = ["Tuần lộc Jollibee", "Giảm giá 50k vé phim"];
+        const invalid = ["Gấu bông CGV", "Giảm giá 50k vé phim"];
         const validIndexes = segments
           .map((value, idx) => !invalid.includes(value) ? idx : -1)
           .filter(idx => idx !== -1);
